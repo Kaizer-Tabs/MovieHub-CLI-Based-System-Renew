@@ -7,8 +7,120 @@ extern "C"
 
 using namespace std;
 
+void watchlistMenu(sqlite3 *db);
+
+void addMovieToWatchlist(sqlite3 *db);
+void viewWatchlist(sqlite3 *db);
+void removeMovieFromWatchlist(sqlite3 *db);
+
 void createTables(sqlite3 *db);
 void showMenu();
+
+void watchlistMenu(sqlite3 *db)
+{
+    int choice;
+
+    do
+    {
+        cout << "\n====== WATCHLIST ======\n";
+        cout << "1. Add Movie\n";
+        cout << "2. View Watchlist\n";
+        cout << "3. Remove Movie\n";
+        cout << "4. Back to Main Menu\n";
+        cout << "Choice: ";
+
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            addMovieToWatchlist(db);
+            break;
+
+        case 2:
+            viewWatchlist(db);
+            break;
+
+        case 3:
+            removeMovieFromWatchlist(db);
+            break;
+
+        case 4:
+            cout << "Returning to main menu.\n";
+            break;
+
+        default:
+            cout << "Invalid choice.\n";
+        }
+    } while (choice != 4);
+}
+
+void addMovieToWatchlist(sqlite3 *db)
+{
+    string movieTitle;
+
+    cin.ignore();
+
+    cout << "Movie Title: ";
+    getline(cin, movieTitle);
+
+    string sql = "INSERT INTO watchlist (movie_title) VALUES ('" + movieTitle + "');";
+
+    char *errMsg = nullptr;
+
+    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+    if (rc == SQLITE_OK)
+    {
+        cout << "Movie added to watchlist.\n";
+    }
+    else
+    {
+        cout << "Error adding movie: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+    }
+}
+
+static int watchlistCallback(void *data, int argc, char **argv, char **azColName)
+{
+    cout << "- " << argv[1] << "\n";
+    return 0;
+}
+
+void viewWatchlist(sqlite3 *db)
+{
+    cout << "\n====== WATCHLIST ======\n";
+
+    string sql = "SELECT * FROM watchlist;";
+
+    sqlite3_exec(db, sql.c_str(), watchlistCallback, nullptr, nullptr);
+}
+
+void removeMovieFromWatchlist(sqlite3 *db)
+{
+    string movieTitle;
+
+    cin.ignore();
+
+    cout << "Movie Title to Remove: ";
+    getline(cin, movieTitle);
+
+    string sql = "DELETE FROM watchlist WHERE movie_title = '" + movieTitle + "';";
+
+    char *errMsg = nullptr;
+
+    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+    if (rc == SQLITE_OK)
+    {
+        cout << "Movie removed from watchlist.\n";
+    }
+    else
+    {
+        cout << "Error removing movie: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+    }
+}
 
 void createTables(sqlite3 *db)
 {
@@ -83,7 +195,7 @@ int main()
             break;
 
         case 2:
-            cout << "Watchlist coming soon.\n";
+            watchlistMenu(db);
             break;
 
         case 3:
