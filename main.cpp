@@ -18,6 +18,11 @@ void historyMenu(sqlite3 *db);
 void markAsWatched(sqlite3 *db);
 void viewHistory(sqlite3 *db);
 
+void ratingsMenu(sqlite3 *db);
+
+void rateMovie(sqlite3 *db);
+void viewRatings(sqlite3 *db);
+
 void createTables(sqlite3 *db);
 void showMenu();
 
@@ -191,9 +196,7 @@ void markAsWatched(sqlite3 *db)
     }
     else
     {
-        cout << "Error marking movie: "
-             << errMsg
-             << "\n";
+        cout << "Error marking movie: " << errMsg << "\n";
 
         sqlite3_free(errMsg);
     }
@@ -214,12 +217,97 @@ void viewHistory(sqlite3 *db)
     sqlite3_exec(db, sql.c_str(), historyCallback, nullptr, nullptr);
 }
 
-void markAsWatched(sqlite3 *db)
+void ratingsMenu(sqlite3 *db)
 {
+    int choice;
+
+    do
+    {
+        cout << "\n====== RATINGS ======\n";
+        cout << "1. Rate Movie\n";
+        cout << "2. View Ratings\n";
+        cout << "3. Back to Main Menu\n";
+        cout << "Choice: ";
+
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            rateMovie(db);
+            break;
+
+        case 2:
+            viewRatings(db);
+            break;
+
+        case 3:
+            cout << "Returning to main menu.\n";
+            break;
+
+        default:
+            cout << "Invalid choice.\n";
+        }
+    } while (choice != 3);
 }
 
-void viewHistory(sqlite3 *db)
+void rateMovie(sqlite3 *db)
 {
+    string movieTitle;
+    int rating;
+
+    cin.ignore();
+
+    cout << "Movie Title to Rate: ";
+    getline(cin, movieTitle);
+
+    cout << "Rating (1-5): ";
+    cin >> rating;
+
+    if (rating < 1 || rating > 5)
+    {
+        cout << "Invalid rating. Please enter a value between 1 and 5.\n";
+        return;
+    }
+
+    string sql = "INSERT INTO ratings (movie_title, rating) VALUES ('" + movieTitle + "', " + to_string(rating) + ");";
+
+    char *errMsg = nullptr;
+
+    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+    if (rc == SQLITE_OK)
+    {
+        cout << "Movie rated successfully.\n";
+    }
+    else
+    {
+        cout << "Error rating movie: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+    }
+}
+
+static int ratingsCallback(void *data, int argc, char **argv, char **azColName)
+{
+    cout << "- " << argv[1] << " | " << argv[2] << "/5" << "\n";
+    return 0;
+}
+
+void viewRatings(sqlite3 *db)
+{
+    cout << "\n====== RATINGS ======\n";
+
+    string sql = "SELECT * FROM ratings;";
+
+    char *errMsg = nullptr;
+
+    int rc = sqlite3_exec(db, sql.c_str(), ratingsCallback, nullptr, &errMsg);
+
+    if (rc != SQLITE_OK)
+    {
+        cout << "Error retrieving ratings: " << errMsg << "\n";
+        sqlite3_free(errMsg);
+    }
 }
 
 void createTables(sqlite3 *db)
@@ -299,7 +387,7 @@ int main()
             break;
 
         case 3:
-            cout << "History coming soon.\n";
+            historyMenu(db);
             break;
 
         case 4:
