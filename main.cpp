@@ -7,6 +7,14 @@ extern "C"
 
 using namespace std;
 
+int watchlistCount = 0;
+int historyCount = 0;
+int ratingsCount = 0;
+
+double averageRating = 0.0;
+int highestRating = 0;
+int lowestRating = 0;
+
 void watchlistMenu(sqlite3 *db);
 
 void addMovieToWatchlist(sqlite3 *db);
@@ -22,6 +30,9 @@ void ratingsMenu(sqlite3 *db);
 
 void rateMovie(sqlite3 *db);
 void viewRatings(sqlite3 *db);
+
+void statisticsMenu(sqlite3 *db);
+void viewStatistics(sqlite3 *db);
 
 void createTables(sqlite3 *db);
 void showMenu();
@@ -310,6 +321,58 @@ void viewRatings(sqlite3 *db)
     }
 }
 
+void statisticsMenu(sqlite3 *db)
+{
+    viewStatistics(db);
+}
+
+static int statisticsCallback(void *data, int argc, char **argv, char **azColName)
+{
+    if (argv[0] != nullptr)
+    {
+        *(double *)data = atof(argv[0]);
+    }
+    return 0;
+}
+
+static int intCallback(void *data, int argc, char **argv, char **azColName)
+{
+    if (argv[0] != nullptr)
+    {
+        *(int *)data = atoi(argv[0]);
+    }
+    return 0;
+}
+
+void viewStatistics(sqlite3 *db)
+{
+    string sqlwatchlist = "SELECT COUNT(*) FROM watchlist;";
+    sqlite3_exec(db, sqlwatchlist.c_str(), intCallback, &watchlistCount, nullptr);
+
+    string sqlhistory = "SELECT COUNT(*) FROM history;";
+    sqlite3_exec(db, sqlhistory.c_str(), intCallback, &historyCount, nullptr);
+
+    string sqlratings = "SELECT COUNT(*) FROM ratings;";
+    sqlite3_exec(db, sqlratings.c_str(), intCallback, &ratingsCount, nullptr);
+
+    string sqlaverage = "SELECT AVG(rating) FROM ratings;";
+    sqlite3_exec(db, sqlaverage.c_str(), statisticsCallback, &averageRating, nullptr);
+
+    string sqlhighest = "SELECT MAX(rating) FROM ratings;";
+    sqlite3_exec(db, sqlhighest.c_str(), intCallback, &highestRating, nullptr);
+
+    string sqllowest = "SELECT MIN(rating) FROM ratings;";
+    sqlite3_exec(db, sqllowest.c_str(), intCallback, &lowestRating, nullptr);
+
+    cout << "\n====== STATISTICS ======\n";
+    cout << "Movies in Watchlist: " << watchlistCount << "\n";
+    cout << "Movies Watched: " << historyCount << "\n";
+    cout << "Movies Rated: " << ratingsCount << "\n";
+    cout << "Average Rating: " << averageRating << "\n";
+    cout << "Highest Rating: " << highestRating << "\n";
+    cout << "Lowest Rating: " << lowestRating << "\n";
+}
+
 void createTables(sqlite3 *db)
 {
     char *errMsg = nullptr;
@@ -391,11 +454,11 @@ int main()
             break;
 
         case 4:
-            cout << "Ratings coming soon.\n";
+            ratingsMenu(db);
             break;
 
         case 5:
-            cout << "Statistics coming soon.\n";
+            statisticsMenu(db);
             break;
 
         case 6:
