@@ -378,6 +378,40 @@ void viewStatistics(sqlite3 *db)
     cout << "Lowest Rating: " << lowestRating << "\n";
 }
 
+void recommendationsMenu(sqlite3 *db)
+{
+    int choice;
+
+    do
+    {
+        cout << "\n====== RECOMMENDATIONS ======\n";
+        cout << "1. Favorite Movies\n";
+        cout << "2. Top 10 Movies\n";
+        cout << "3. Back to Main Menu\n";
+        cout << "Choice: ";
+
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            favoriteMovies(db);
+            break;
+
+        case 2:
+            topTenMovies(db);
+            break;
+
+        case 3:
+            cout << "Returning to main menu.\n";
+            break;
+
+        default:
+            cout << "Invalid choice.\n";
+        }
+    } while (choice != 3);
+}
+
 static int favoriteMoviesCallback(void *data, int argc, char **argv, char **azColName)
 {
     cout << "- " << argv[0] << endl;
@@ -497,7 +531,7 @@ int main()
             break;
 
         case 6:
-            cout << "Recommendations coming soon.\n";
+            recommendationsMenu(db);
             break;
 
         case 7:
