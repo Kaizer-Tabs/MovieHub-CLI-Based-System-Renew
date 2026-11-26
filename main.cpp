@@ -34,6 +34,11 @@ void viewRatings(sqlite3 *db);
 void statisticsMenu(sqlite3 *db);
 void viewStatistics(sqlite3 *db);
 
+void recommendationsMenu(sqlite3 *db);
+
+void favoriteMovies(sqlite3 *db);
+void topTenMovies(sqlite3 *db);
+
 void createTables(sqlite3 *db);
 void showMenu();
 
@@ -371,6 +376,36 @@ void viewStatistics(sqlite3 *db)
     cout << "Average Rating: " << averageRating << "\n";
     cout << "Highest Rating: " << highestRating << "\n";
     cout << "Lowest Rating: " << lowestRating << "\n";
+}
+
+static int favoriteMoviesCallback(void *data, int argc, char **argv, char **azColName)
+{
+    cout << "- " << argv[0] << endl;
+    return 0;
+}
+
+void favoriteMovies(sqlite3 *db)
+{
+    cout << "\n====== FAVORITE MOVIES ======\n";
+
+    string sql = "SELECT movie_title FROM ratings WHERE rating = 5;";
+
+    sqlite3_exec(db, sql.c_str(), favoriteMoviesCallback, nullptr, nullptr);
+}
+
+static int topTenMoviesCallback(void *data, int argc, char **argv, char **azColName)
+{
+    cout << "- " << argv[0] << " (" << argv[1] << "/5)" << endl;
+    return 0;
+}
+
+void topTenMovies(sqlite3 *db)
+{
+    cout << "\n====== TOP 10 MOVIES ======\n";
+
+    string sql = "SELECT movie_title, rating FROM ratings ORDER BY rating DESC LIMIT 10;";
+
+    sqlite3_exec(db, sql.c_str(), topTenMoviesCallback, nullptr, nullptr);
 }
 
 void createTables(sqlite3 *db)
