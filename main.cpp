@@ -13,6 +13,11 @@ void addMovieToWatchlist(sqlite3 *db);
 void viewWatchlist(sqlite3 *db);
 void removeMovieFromWatchlist(sqlite3 *db);
 
+void historyMenu(sqlite3 *db);
+
+void markAsWatched(sqlite3 *db);
+void viewHistory(sqlite3 *db);
+
 void createTables(sqlite3 *db);
 void showMenu();
 
@@ -120,6 +125,101 @@ void removeMovieFromWatchlist(sqlite3 *db)
         cout << "Error removing movie: " << errMsg << "\n";
         sqlite3_free(errMsg);
     }
+}
+
+void historyMenu(sqlite3 *db)
+{
+    int choice;
+
+    do
+    {
+        cout << "\n====== HISTORY ======\n";
+        cout << "1. Mark as Watched\n";
+        cout << "2. View History\n";
+        cout << "3. Back to Main Menu\n";
+        cout << "Choice: ";
+
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            markAsWatched(db);
+            break;
+
+        case 2:
+            viewHistory(db);
+            break;
+
+        case 3:
+            cout << "Returning to main menu.\n";
+            break;
+
+        default:
+            cout << "Invalid choice.\n";
+        }
+    } while (choice != 3);
+}
+
+void markAsWatched(sqlite3 *db)
+{
+    string movieTitle;
+
+    cin.ignore();
+
+    cout << "Movie Title to Mark as Watched: ";
+    getline(cin, movieTitle);
+
+    string sql = "INSERT INTO history (movie_title, watched_date) VALUES ('" + movieTitle + "', datetime('now'));";
+
+    string deleteSql = "DELETE FROM watchlist WHERE movie_title = '" + movieTitle + "';";
+
+    char *errMsg = nullptr;
+
+    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+
+    if (rc == SQLITE_OK)
+    {
+        sqlite3_exec(
+            db,
+            deleteSql.c_str(),
+            nullptr,
+            nullptr,
+            &errMsg);
+
+        cout << "Movie marked as watched.\n";
+    }
+    else
+    {
+        cout << "Error marking movie: "
+             << errMsg
+             << "\n";
+
+        sqlite3_free(errMsg);
+    }
+}
+
+static int historyCallback(void *data, int argc, char **argv, char **azColName)
+{
+    cout << "- " << argv[1] << " | " << argv[2] << "\n";
+    return 0;
+}
+
+void viewHistory(sqlite3 *db)
+{
+    cout << "\n====== HISTORY ======\n";
+
+    string sql = "SELECT * FROM history;";
+
+    sqlite3_exec(db, sql.c_str(), historyCallback, nullptr, nullptr);
+}
+
+void markAsWatched(sqlite3 *db)
+{
+}
+
+void viewHistory(sqlite3 *db)
+{
 }
 
 void createTables(sqlite3 *db)
