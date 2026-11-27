@@ -1,5 +1,6 @@
 #include <iostream>
-
+#include "include/TMDB.h"
+#include <curl/curl.h>
 extern "C"
 {
 #include "sqlite/sqlite3.h"
@@ -511,7 +512,8 @@ int main()
         switch (choice)
         {
         case 1:
-            cout << "Search Movies coming soon.\n";
+            cin.ignore();
+            searchMovie(db);
             break;
 
         case 2:
